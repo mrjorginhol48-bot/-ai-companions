@@ -1,1 +1,1532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Companions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
+       
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
+        .auth-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--surface-light);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg);
+            border: 2px solid var(--surface-light);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--surface-light);
+            color: var(--text);
+            margin-top: 1rem;
+        }
+
+        .btn-secondary:active {
+            background: var(--surface-light);
+        }
+
+        .error-msg {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .app-container {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .app-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--surface-light);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .icon-btn:active {
+            background: var(--primary);
+            transform: scale(0.95);
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+            padding-bottom: 100px;
+        }
+
+        .character-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:active {
+            transform: scale(0.98);
+            border-color: var(--primary);
+        }
+
+        .character-card.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--surface) 0%, rgba(99, 102, 241, 0.1) 100%);
+        }
+
+        .char-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+        }
+
+        .char-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+        }
+
+        .char-role {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .char-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        .add-character {
+            border: 2px dashed var(--surface-light);
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .add-character .plus-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .char-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .character-card:active .char-actions,
+        .character-card:hover .char-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .action-btn.delete {
+            color: var(--error);
+        }
+
+        .chat-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg);
+        }
+
+        .chat-header {
+            background: var(--surface);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--surface-light);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .chat-header-info {
+            flex: 1;
+        }
+
+        .chat-header-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .chat-header-status {
+            font-size: 0.875rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 1rem;
+            border-radius: 20px;
+            position: relative;
+            animation: messageSlide 0.3s ease;
+            line-height: 1.5;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: var(--surface);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: var(--surface);
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            border-bottom-left-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            background: var(--surface);
+            padding: 1rem;
+            border-top: 1px solid var(--surface-light);
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg);
+            border: 2px solid var(--surface-light);
+            border-radius: 24px;
+            padding: 0.875rem 1.25rem;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+            background: var(--primary-dark);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 24px 24px 0 0;
+            padding: 1.5rem;
+            animation: slideUp 0.3s ease;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            border: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .avatar-selector {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .avatar-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .avatar-option.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg);
+            border: 2px solid var(--surface-light);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .memory-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .memory-tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .memory-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .add-memory {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .add-memory input {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 2px solid var(--surface-light);
+            border-radius: 12px;
+            color: var(--text);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--surface-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: color 0.3s;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item:active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+        }
+
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 80%;
+            max-width: 300px;
+            height: 100%;
+            background: var(--surface);
+            z-index: 200;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+            flex-direction: column;
+        }
+
+        .settings-panel.active {
+            display: flex;
+        }
+
+        .settings-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--surface-light);
+        }
+
+        .settings-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .settings-item {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .settings-item:active {
+            background: var(--surface-light);
+        }
+
+        .settings-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .characters-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--secondary);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>🤖 AI Companions</h1>
+                <p>Tus compañeros de conversación inteligentes</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                    <div class="error-msg" id="loginError">Credenciales incorrectas</div>
+                </div>
+                <button type="submit" class="btn">Iniciar Sesión</button>
+                <button type="button" class="btn btn-secondary" onclick="showRegister()">Crear Cuenta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="registerScreen" class="auth-container hidden">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>✨ Registro</h1>
+                <p>Crea tu cuenta segura</p>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="regName" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="regEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña (mínimo 6 caracteres)</label>
+                    <input type="password" id="regPassword" placeholder="••••••••" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <input type="password" id="regConfirm" placeholder="••••••••" required>
+                    <div class="error-msg" id="regError">Las contraseñas no coinciden</div>
+                </div>
+                <button type="submit" class="btn">Crear Cuenta</button>
+                <button type="button" class="btn btn-secondary" onclick="showLogin()">Ya tengo cuenta</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="app-container">
+        <header class="app-header">
+            <div class="header-title">Mis Compañeros</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="showSettings()">⚙️</button>
+                <button class="icon-btn" onclick="logout()">🚪</button>
+            </div>
+        </header>
+
+        <div class="characters-grid" id="charactersGrid">
+            <!-- Characters will be rendered here -->
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="showHome()">
+                <span class="nav-icon">🏠</span>
+                <span>Inicio</span>
+            </div>
+            <div class="nav-item" onclick="openCharacterModal()">
+                <span class="nav-icon">➕</span>
+                <span>Nuevo</span>
+            </div>
+            <div class="nav-item" onclick="showSettings()">
+                <span class="nav-icon">⚙️</span>
+                <span>Ajustes</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Chat Container -->
+    <div id="chatContainer" class="chat-container">
+        <div class="chat-header">
+            <button class="back-btn" onclick="closeChat()">←</button>
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chatCharName">Nombre</div>
+                <div class="chat-header-status">
+                    <span>●</span>
+                    <span>En línea</span>
+                </div>
+            </div>
+            <button class="icon-btn" onclick="editCurrentCharacter()">✏️</button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages rendered here -->
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="messageInput" placeholder="Escribe un mensaje..." maxlength="500">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <!-- Character Modal -->
+    <div id="characterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Nuevo Compañero</h2>
+                <button class="close-modal" onclick="closeModal()">✕</button>
+            </div>
+            
+            <form id="characterForm">
+                <input type="hidden" id="charId">
+                
+                <div class="form-section">
+                    <h3>Avatar</h3>
+                    <div class="avatar-selector" id="avatarSelector">
+                        <div class="avatar-option selected" data-avatar="🤖">🤖</div>
+                        <div class="avatar-option" data-avatar="👩">👩</div>
+                        <div class="avatar-option" data-avatar="👨">👨</div>
+                        <div class="avatar-option" data-avatar="🧙">🧙</div>
+                        <div class="avatar-option" data-avatar="👸">👸</div>
+                        <div class="avatar-option" data-avatar="🦸">🦸</div>
+                        <div class="avatar-option" data-avatar="🧚">🧚</div>
+                        <div class="avatar-option" data-avatar="🐱">🐱</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Información Básica</h3>
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="charName" required maxlength="20" placeholder="Ej: Ana, Carlos, Luna...">
+                    </div>
+                    <div class="form-group">
+                        <label>¿Quién es? (Rol/Personalidad) *</label>
+                        <textarea id="charRole" required maxlength="200" placeholder="Ej: Una amiga cercana que le gusta escuchar y dar consejos sobre tecnología..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Memorias Importantes</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.75rem;">
+                        Datos que tu compañero debe recordar sobre ti (máx. 10)
+                    </p>
+                    <div class="memory-tags" id="memoryTags"></div>
+                    <div class="add-memory">
+                        <input type="text" id="newMemory" placeholder="Ej: Me gusta el café, trabajo en..." maxlength="50">
+                        <button type="button" class="btn" style="width: auto; padding: 0.75rem 1rem;" onclick="addMemory()">Añadir</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" style="margin-top: 1rem;">Guardar Compañero</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="overlay" id="overlay" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>Configuración</h2>
+        </div>
+        <div class="settings-list">
+            <div class="settings-item" onclick="clearAllData()">
+                <div class="settings-icon">🗑️</div>
+                <div>
+                    <div style="font-weight: 600;">Borrar todos los datos</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Elimina personajes y conversaciones</div>
+                </div>
+            </div>
+            <div class="settings-item" onclick="exportData()">
+                <div class="settings-icon">📥</div>
+                <div>
+                    <div style="font-weight: 600;">Exportar datos</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Guarda tu información</div>
+                </div>
+            </div>
+            <div class="settings-item" onclick="showPrivacy()">
+                <div class="settings-icon">🔒</div>
+                <div>
+                    <div style="font-weight: 600;">Privacidad y Seguridad</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">Tu información está protegida</div>
+                </div>
+            </div>
+            <div class="settings-item" onclick="logout()">
+                <div class="settings-icon" style="color: var(--error);">🚪</div>
+                <div style="color: var(--error);">
+                    <div style="font-weight: 600;">Cerrar Sesión</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Management
+        const DataManager = {
+            getUsers() {
+                return JSON.parse(localStorage.getItem('aiChat_users') || '[]');
+            },
+            saveUsers(users) {
+                localStorage.setItem('aiChat_users', JSON.stringify(users));
+            },
+            getCharacters() {
+                const user = this.getCurrentUser();
+                if (!user) return [];
+                return JSON.parse(localStorage.getItem(`aiChat_chars_${user.email}`) || '[]');
+            },
+            saveCharacters(chars) {
+                const user = this.getCurrentUser();
+                if (!user) return;
+                localStorage.setItem(`aiChat_chars_${user.email}`, JSON.stringify(chars));
+            },
+            getMessages(charId) {
+                const user = this.getCurrentUser();
+                if (!user) return [];
+                return JSON.parse(localStorage.getItem(`aiChat_msgs_${user.email}_${charId}`) || '[]');
+            },
+            saveMessages(charId, msgs) {
+                const user = this.getCurrentUser();
+                if (!user) return;
+                localStorage.setItem(`aiChat_msgs_${user.email}_${charId}`, JSON.stringify(msgs));
+            },
+            getCurrentUser() {
+                return JSON.parse(sessionStorage.getItem('aiChat_currentUser'));
+            },
+            setCurrentUser(user) {
+                sessionStorage.setItem('aiChat_currentUser', JSON.stringify(user));
+            },
+            clearCurrentUser() {
+                sessionStorage.removeItem('aiChat_currentUser');
+            }
+        };
+
+        // Auth Functions
+        function showRegister() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+            const error = document.getElementById('regError');
+
+            if (pass !== confirm) {
+                error.style.display = 'block';
+                return;
+            }
+
+            const users = DataManager.getUsers();
+            if (users.find(u => u.email === email)) {
+                error.textContent = 'Este correo ya está registrado';
+                error.style.display = 'block';
+                return;
+            }
+
+            const hashedPass = btoa(pass);
+            
+            users.push({ name, email, password: hashedPass });
+            DataManager.saveUsers(users);
+            
+            alert('¡Cuenta creada! Por favor inicia sesión.');
+            showLogin();
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const error = document.getElementById('loginError');
+
+            const users = DataManager.getUsers();
+            const hashedPass = btoa(pass);
+            const user = users.find(u => u.email === email && u.password === hashedPass);
+
+            if (!user) {
+                error.style.display = 'block';
+                return;
+            }
+
+            DataManager.setCurrentUser(user);
+            initApp();
+        });
+
+        function logout() {
+            DataManager.clearCurrentUser();
+            location.reload();
+        }
+
+        function initApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('mainApp').style.display = 'flex';
+            renderCharacters();
+        }
+
+        let currentMemories = [];
+        let currentCharacter = null;
+
+        function renderCharacters() {
+            const grid = document.getElementById('charactersGrid');
+            const chars = DataManager.getCharacters();
+            
+            if (chars.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🤖</div>
+                        <h3>No tienes compañeros aún</h3>
+                        <p>Crea hasta 5 personajes personalizados para conversar</p>
+                    </div>
+                `;
+            } else {
+                grid.innerHTML = chars.map(char => `
+                    <div class="character-card ${currentCharacter?.id === char.id ? 'active' : ''}" onclick="openChat('${char.id}')">
+                        <div class="char-actions" onclick="event.stopPropagation()">
+                            <button class="action-btn" onclick="editCharacter('${char.id}')">✏️</button>
+                            <button class="action-btn delete" onclick="deleteCharacter('${char.id}')">🗑️</button>
+                        </div>
+                        <div class="char-avatar">${char.avatar}</div>
+                        <div class="char-name">${char.name}</div>
+                        <div class="char-role">${char.role.substring(0, 30)}${char.role.length > 30 ? '...' : ''}</div>
+                        <div class="char-status">
+                            <span>●</span>
+                            <span>Disponible</span>
+                        </div>
+                        ${char.memories?.length ? `<span class="badge">${char.memories.length}</span>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            if (chars.length < 5) {
+                grid.innerHTML += `
+                    <div class="character-card add-character" onclick="openCharacterModal()">
+                        <div class="plus-icon">+</div>
+                        <div style="color: var(--text-muted); font-size: 0.875rem;">
+                            ${5 - chars.length} espacios disponibles
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function openCharacterModal() {
+            const chars = DataManager.getCharacters();
+            if (chars.length >= 5) {
+                alert('Máximo 5 personajes alcanzado. Elimina uno para crear otro.');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = 'Nuevo Compañero';
+            document.getElementById('characterForm').reset();
+            document.getElementById('charId').value = '';
+            currentMemories = [];
+            renderMemories();
+            
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('.avatar-option').classList.add('selected');
+            
+            document.getElementById('characterModal').classList.add('active');
+        }
+
+        function editCharacter(id) {
+            const chars = DataManager.getCharacters();
+            const char = chars.find(c => c.id === id);
+            if (!char) return;
+
+            currentCharacter = char;
+            document.getElementById('modalTitle').textContent = 'Editar Compañero';
+            document.getElementById('charId').value = char.id;
+            document.getElementById('charName').value = char.name;
+            document.getElementById('charRole').value = char.role;
+            currentMemories = char.memories || [];
+            
+            document.querySelectorAll('.avatar-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.avatar === char.avatar);
+            });
+            
+            renderMemories();
+            document.getElementById('characterModal').classList.add('active');
+        }
+
+        function editCurrentCharacter() {
+            if (currentCharacter) {
+                closeChat();
+                setTimeout(() => editCharacter(currentCharacter.id), 300);
+            }
+        }
+
+        function deleteCharacter(id) {
+            if (!confirm('¿Eliminar este compañero y todas sus conversaciones?')) return;
+            
+            const chars = DataManager.getCharacters().filter(c => c.id !== id);
+            DataManager.saveCharacters(chars);
+            
+            const user = DataManager.getCurrentUser();
+            localStorage.removeItem(`aiChat_msgs_${user.email}_${id}`);
+            
+            renderCharacters();
+        }
+
+        document.querySelectorAll('.avatar-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        function addMemory() {
+            const input = document.getElementById('newMemory');
+            const value = input.value.trim();
+            
+            if (!value) return;
+            if (currentMemories.length >= 10) {
+                alert('Máximo 10 memorias alcanzado');
+                return;
+            }
+            if (currentMemories.includes(value)) {
+                alert('Esta memoria ya existe');
+                return;
+            }
+            
+            currentMemories.push(value);
+            input.value = '';
+            renderMemories();
+        }
+
+        function removeMemory(index) {
+            currentMemories.splice(index, 1);
+            renderMemories();
+        }
+
+        function renderMemories() {
+            const container = document.getElementById('memoryTags');
+            container.innerHTML = currentMemories.map((mem, idx) => `
+                <div class="memory-tag">
+                    ${mem}
+                    <button type="button" onclick="removeMemory(${idx})">×</button>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('newMemory').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addMemory();
+            }
+        });
+
+        document.getElementById('characterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('charId').value;
+            const name = document.getElementById('charName').value.trim();
+            const role = document.getElementById('charRole').value.trim();
+            const avatar = document.querySelector('.avatar-option.selected').dataset.avatar;
+            
+            const chars = DataManager.getCharacters();
+            
+            if (id) {
+                const idx = chars.findIndex(c => c.id === id);
+                if (idx !== -1) {
+                    chars[idx] = { ...chars[idx], name, role, avatar, memories: currentMemories };
+                }
+            } else {
+                if (chars.length >= 5) {
+                    alert('Límite de 5 personajes alcanzado');
+                    return;
+                }
+                chars.push({
+                    id: Date.now().toString(),
+                    name,
+                    role,
+                    avatar,
+                    memories: currentMemories,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            DataManager.saveCharacters(chars);
+            closeModal();
+            renderCharacters();
+        });
+
+        function closeModal() {
+            document.getElementById('characterModal').classList.remove('active');
+        }
+
+        function openChat(charId) {
+            const chars = DataManager.getCharacters();
+            const char = chars.find(c => c.id === charId);
+            if (!char) return;
+            
+            currentCharacter = char;
+            document.getElementById('chatCharName').textContent = char.name;
+            
+            const msgs = DataManager.getMessages(charId);
+            renderMessages(msgs);
+            
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'flex';
+            
+            if (msgs.length === 0) {
+                setTimeout(() => {
+                    const welcome = generateResponse(char, 'hola', true);
+                    addMessage(welcome, false);
+                }, 500);
+            }
+        }
+
+        function closeChat() {
+            document.getElementById('chatContainer').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'flex';
+            currentCharacter = null;
+            renderCharacters();
+        }
+
+        function renderMessages(msgs) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = msgs.map(msg => `
+                <div class="message ${msg.isUser ? 'user' : 'ai'}">
+                    ${escapeHtml(msg.text)}
+                    <div class="message-time">${formatTime(msg.time)}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addMessage(text, isUser) {
+            const msgs = DataManager.getMessages(currentCharacter.id);
+            const msg = {
+                text,
+                isUser,
+                time: new Date().toISOString()
+            };
+            msgs.push(msg);
+            DataManager.saveMessages(currentCharacter.id, msgs);
+            
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'ai'}`;
+            div.innerHTML = `
+                ${escapeHtml(text)}
+                <div class="message-time">${formatTime(msg.time)}</div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const btn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+            
+            if (!text || !currentCharacter) return;
+            
+            input.value = '';
+            btn.disabled = true;
+            addMessage(text, true);
+            
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.add('active');
+            
+            setTimeout(() => {
+                indicator.classList.remove('active');
+                const response = generateResponse(currentCharacter, text);
+                addMessage(response, false);
+                btn.disabled = false;
+            }, 1500 + Math.random() * 1000);
+        }
+
+        function generateResponse(char, userMsg, isWelcome = false) {
+            const memories = char.memories || [];
+            const msg = userMsg.toLowerCase();
+            
+            if (isWelcome) {
+                return `¡Hola! Soy ${char.name}. ${char.role}. ${memories.length ? 'Veo que ya tenemos algunas cosas en común. 😊' : '¿En qué puedo ayudarte hoy?'}`;
+            }
+            
+            if (memories.some(m => msg.includes(m.toLowerCase()) || m.toLowerCase().includes(msg))) {
+                return `¡Claro! Recuerdo que ${memories.find(m => msg.includes(m.toLowerCase()) || m.toLowerCase().includes(msg))}. Cuéntame más sobre eso.`;
+            }
+            
+            if (msg.includes('hola') || msg.includes('buenas')) {
+                return `¡Hola de nuevo! Me alegra conversar contigo. ¿Cómo va tu día?`;
+            }
+            
+            if (msg.includes('cómo estás') || msg.includes('qué tal')) {
+                return `Estoy aquí listo para ayudarte. Como ${char.role.split('.')[0]}, me interesa saber cómo te sientes tú.`;
+            }
+            
+            if (msg.includes('gracias')) {
+                return `De nada. Estoy aquí para lo que necesites. ${memories.length ? 'Recuerdo lo que me has contado y valoro nuestra conversación.' : ''}`;
+            }
+            
+            if (msg.includes('adiós') || msg.includes('hasta luego')) {
+                return `¡Hasta luego! Ha sido un placer conversar. Volveré a estar aquí cuando me necesites.`;
+            }
+            
+            const generics = [
+                `Entiendo. Como ${char.role.split('.')[0]}, creo que es importante explorar eso más a fondo.`,
+                `Interesante punto de vista. ¿Qué te lleva a pensar así?`,
+                `Cuéntame más sobre eso. Me gustaría entender mejor tu perspectiva.`,
+                `Eso suena importante para ti. ¿Cómo te hace sentir?`,
+                `Veo. Basándome en lo que me has compartido${memories.length ? ', incluyendo lo que recuerdo de ti' : ''}, eso tiene sentido.`
+            ];
+            
+            return generics[Math.floor(Math.random() * generics.length)];
+        }
+
+        function showSettings() {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('settingsPanel').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('settingsPanel').classList.remove('active');
+        }
+
+        function clearAllData() {
+            if (!confirm('¿Estás seguro? Se eliminarán TODOS tus personajes y conversaciones permanentemente.')) return;
+            
+            const user = DataManager.getCurrentUser();
+            if (!user) return;
+            
+            const chars = DataManager.getCharacters();
+            chars.forEach(char => {
+                localStorage.removeItem(`aiChat_msgs_${user.email}_${char.id}`);
+            });
+            localStorage.removeItem(`aiChat_chars_${user.email}`);
+            
+            renderCharacters();
+            closeSettings();
+            alert('Todos los datos han sido eliminados');
+        }
+
+        function exportData() {
+            const user = DataManager.getCurrentUser();
+            const chars = DataManager.getCharacters();
+            const data = {
+                user: user.email,
+                exportDate: new Date().toISOString(),
+                characters: chars.map(char => ({
+                    ...char,
+                    messages: DataManager.getMessages(char.id)
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-chat-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showPrivacy() {
+            alert(`🔒 Privacidad y Seguridad:
+            
+• Tus datos se almacenan localmente en tu dispositivo
+• Las contraseñas están encriptadas básicamente (base64)
+• No compartimos información con terceros
+• Las conversaciones son privadas y personales
+• Recomendamos no compartir información sensible real
+
+Para mayor seguridad en producción, implementar:
+- Encriptación AES-256
+- Autenticación de dos factores
+- HTTPS obligatorio
+- Política de retención de datos`);
+        }
+
+        function showHome() {
+            closeChat();
+            closeSettings();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(iso) {
+            const date = new Date(iso);
+            return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        window.addEventListener('load', function() {
+            const user = DataManager.getCurrentUser();
+            if (user) {
+                initApp();
+            }
+        });
+    </script>
+</body>
+</html>
